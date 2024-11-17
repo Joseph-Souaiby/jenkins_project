@@ -45,10 +45,17 @@ pipeline {
                 script {
                     bat """
                         call ${VIRTUAL_ENV}\\Scripts\\activate.bat
-                        coverage run -m pytest
+                        set PYTHONPATH=%WORKSPACE%
+                        coverage run --source=. -m pytest
                         coverage report
                         coverage xml -o coverage.xml
                     """
+                }
+            }
+            post {
+                always {
+                    // Publish coverage report (if you have a coverage plugin)
+                    publishCoverage adapters: [coberturaAdapter('coverage.xml')], sourceFileResolver: sourceFiles('NEVER_STORE')
                 }
             }
         }
@@ -59,6 +66,12 @@ pipeline {
                         call ${VIRTUAL_ENV}\\Scripts\\activate.bat
                         bandit -r . -f xml -o bandit_report.xml
                     """
+                }
+            }
+            post {
+                always {
+                    // Publish bandit report (if you have a plugin to visualize it)
+                    recordIssues tools: [bandit(pattern: 'bandit_report.xml')]
                 }
             }
         }
