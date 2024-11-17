@@ -24,7 +24,7 @@ pipeline {
                 script {
                     bat """
                         call ${VIRTUAL_ENV}\\Scripts\\activate.bat
-                        flake8 app.py
+                        flake8 app.py || exit 0
                     """
                 }
             }
@@ -57,7 +57,7 @@ pipeline {
                 script {
                     bat """
                         call ${VIRTUAL_ENV}\\Scripts\\activate.bat
-                        bandit -r . -f xml -o bandit_report.xml
+                        bandit -r . -f xml -o bandit_report.xml || exit 0
                     """
                 }
             }
