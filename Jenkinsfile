@@ -41,7 +41,11 @@ pipeline {
                     if (isUnix()) {
                         sh "source ${VIRTUAL_ENV}/bin/activate && pytest"
                     } else {
-                        bat "${VIRTUAL_ENV}\\Scripts\\activate && pytest"
+                        bat """
+                ${VIRTUAL_ENV}\\Scripts\\activate
+                set PYTHONPATH=%WORKSPACE%
+                pytest
+                """
                     }
                 }
             }
