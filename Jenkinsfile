@@ -8,45 +8,57 @@ pipeline {
             steps {
                 script {
                     // Check if virtual environment exists
-                    if (!fileExists("${env.WORKSPACE}/${VIRTUAL_ENV}")) {
-                        if (isUnix()) {
-                            sh "python3 -m venv ${VIRTUAL_ENV}"
-                        } else {
-                            bat "python -m venv ${VIRTUAL_ENV}"
-                        }
+                    if (!fileExists("${env.WORKSPACE}\\${VIRTUAL_ENV}")) {
+                        bat "python -m venv ${VIRTUAL_ENV}"
                     }
                     // Activate virtual environment and install requirements
-                    if (isUnix()) {
-                        sh "source ${VIRTUAL_ENV}/bin/activate && pip install -r requirements.txt"
-                    } else {
-                        bat "${VIRTUAL_ENV}\\Scripts\\activate && pip install -r requirements.txt"
-                    }
+                    bat """
+                        call ${VIRTUAL_ENV}\\Scripts\\activate.bat
+                        pip install -r requirements.txt
+                    """
                 }
             }
         }
         stage('Lint') {
             steps {
                 script {
-                    if (isUnix()) {
-                        sh "source ${VIRTUAL_ENV}/bin/activate && flake8 app.py"
-                    } else {
-                        bat "${VIRTUAL_ENV}\\Scripts\\activate && flake8 app.py"
-                    }
+                    bat """
+                        call ${VIRTUAL_ENV}\\Scripts\\activate.bat
+                        flake8 app.py
+                    """
                 }
             }
         }
         stage('Test') {
             steps {
                 script {
-                    if (isUnix()) {
-                        sh "source ${VIRTUAL_ENV}/bin/activate && pytest"
-                    } else {
-                        bat """
-                ${VIRTUAL_ENV}\\Scripts\\activate
-                set PYTHONPATH=%WORKSPACE%
-                pytest
-                """
-                    }
+                    bat """
+                        call ${VIRTUAL_ENV}\\Scripts\\activate.bat
+                        set PYTHONPATH=%WORKSPACE%
+                        pytest
+                    """
+                }
+            }
+        }
+        stage('Coverage') {
+            steps {
+                script {
+                    bat """
+                        call ${VIRTUAL_ENV}\\Scripts\\activate.bat
+                        coverage run -m pytest
+                        coverage report
+                        coverage xml -o coverage.xml
+                    """
+                }
+            }
+        }
+        stage('Security Scan') {
+            steps {
+                script {
+                    bat """
+                        call ${VIRTUAL_ENV}\\Scripts\\activate.bat
+                        bandit -r . -f xml -o bandit_report.xml
+                    """
                 }
             }
         }
@@ -54,7 +66,11 @@ pipeline {
             steps {
                 script {
                     echo "Deploying application..."
-                    // Add actual deployment logic here
+                    // Implement your deployment logic here
+                    bat """
+                        call ${VIRTUAL_ENV}\\Scripts\\activate.bat
+                        python deploy.py
+                    """
                 }
             }
         }
